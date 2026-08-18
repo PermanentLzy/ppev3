@@ -19,12 +19,18 @@ namespace MyCompiler
 
         bool changed = true;
         int iter = 0;
-        const int MAX_ITER = 10;
+        const int MAX_ITER = 20;
 
         while (changed && iter < MAX_ITER)
         {
             changed = false;
             size_t before = program.instructions.size();
+
+            // 对每条指令计算签名（toString 哈希），用于检测内容变化
+            std::vector<std::string> beforeSigs;
+            beforeSigs.reserve(program.instructions.size());
+            for (auto &instr : program.instructions)
+                beforeSigs.push_back(instr.toString());
 
             constantFolding(program);                // 常量折叠
             copyPropagation(program);                 // 复写传播
@@ -34,8 +40,27 @@ namespace MyCompiler
             coalesceTemporaryCopies(program);        // 临时→局部合并
             peepholeOptimization(program);           // 窥孔优化
 
+            // 检查指令数量变化
             if (program.instructions.size() != before)
                 changed = true;
+
+            // 检查指令内容变化（即使数量不变，内容变化也需要继续迭代）
+            if (!changed)
+            {
+                size_t minLen = std::min(beforeSigs.size(), program.instructions.size());
+                for (size_t i = 0; i < minLen; ++i)
+                {
+                    if (beforeSigs[i] != program.instructions[i].toString())
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+                // 如果长度不同但已检查过前缀，还需检查新增/删除的部分
+                if (!changed && beforeSigs.size() != program.instructions.size())
+                    changed = true;
+            }
+
             ++iter;
         }
 

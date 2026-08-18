@@ -32,6 +32,15 @@ namespace MyCompiler
             return lhs - rhs;
         if (op == "*")
             return lhs * rhs;
+        if (op == ">>")
+        {
+            // 算术右移（C 语义：向负无穷截断）
+            return lhs >> rhs;
+        }
+        if (op == "<<")
+        {
+            return lhs << rhs;
+        }
         if (op == "%")
         {
             if (rhs == 0)
@@ -287,6 +296,16 @@ namespace MyCompiler
                         ++totalFolded;
                         continue;
                     }
+                    // x<<0→x, x>>0→x
+                    if (rc && rv == 0 && (instr.op == "<<" || instr.op == ">>"))
+                    {
+                        instr.type = TACType::ASSIGN;
+                        instr.rhs = TACOperand::none();
+                        instr.op.clear();
+                        changed = true;
+                        ++totalFolded;
+                        continue;
+                    }
                     // 1*x→x
                     if (lc && lv == 1 && instr.op == "*")
                     {
@@ -298,10 +317,10 @@ namespace MyCompiler
                         ++totalFolded;
                         continue;
                     }
-                    // x*0→0
+                    // x*0→0, 0<<x→0, 0>>x→0
                     if ((lc && lv == 0) || (rc && rv == 0))
                     {
-                        if (instr.op == "*")
+                        if (instr.op == "*" || instr.op == "<<" || instr.op == ">>")
                         {
                             instr.type = TACType::ASSIGN;
                             instr.lhs = TACOperand::constInt(0);

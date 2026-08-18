@@ -16,79 +16,110 @@
 #include <string>
 #include <vector>
 
-namespace MyCompiler {
+namespace MyCompiler
+{
 
-/// 获取操作数名称
-static std::string opn(const TACOperand& op) {
-    if (op.type == TACOpType::VAR || op.type == TACOpType::TEMP)
-        return op.name;
-    return "";
-}
-
-/// 替换指令中的操作数
-static void replaceInInstr(TACInstruction& instr, const std::string& from, const std::string& to) {
-    if (opn(instr.lhs) == from) instr.lhs = TACOperand::var(to);
-    if (opn(instr.rhs) == from) instr.rhs = TACOperand::var(to);
-}
-
-void Optimizer::copyPropagation(TACProgram& program) {
-    // 收集使用计数：哪些变量被引用了
-    std::unordered_map<std::string, int> useCount;
-    for (auto& instr : program.instructions) {
-        std::string l = opn(instr.lhs), r = opn(instr.rhs);
-        if (!l.empty()) useCount[l]++;
-        if (!r.empty()) useCount[r]++;
+    /// 获取操作数名称
+    static std::string opn(const TACOperand &op)
+    {
+        if (op.type == TACOpType::VAR || op.type == TACOpType::TEMP)
+            return op.name;
+        return "";
     }
 
-    int propagated = 0;
-    for (size_t i = 0; i < program.instructions.size(); ++i) {
-        auto& instr = program.instructions[i];
+    /// 替换指令中的操作数
+    static void replaceInInstr(TACInstruction &instr, const std::string &from, const std::string &to)
+    {
+        if (opn(instr.lhs) == from)
+            instr.lhs = TACOperand::var(to);
+        if (opn(instr.rhs) == from)
+            instr.rhs = TACOperand::var(to);
+    }
 
-        // 识别 x = y (y 是 VAR/TEMP, x 也是 VAR/TEMP)
-        if (instr.type == TACType::ASSIGN &&
-            (instr.lhs.type == TACOpType::VAR || instr.lhs.type == TACOpType::TEMP) &&
-            (instr.result.type == TACOpType::VAR || instr.result.type == TACOpType::TEMP) &&
-            instr.lhs.type != TACOpType::CONST_INT) {
+    void Optimizer::copyPropagation(TACProgram &program)
+    {
+        // 收集使用计数：哪些变量被引用了
+        std::unordered_map<std::string, int> useCount;
+        // 收集 FUNC_ARG 定义的变量（函数参数，不应被复写传播替换）
+        std::unordered_set<std::string> funcArgVars;
+        for (auto &instr : program.instructions)
+        {
+            if (instr.type == TACType::FUNC_ARG && !instr.result.name.empty())
+            {
+                funcArgVars.insert(instr.result.name);
+            }
+            std::string l = opn(instr.lhs), r = opn(instr.rhs);
+            if (!l.empty())
+                useCount[l]++;
+            if (!r.empty())
+                useCount[r]++;
+        }
 
-            std::string from = instr.result.name;
-            std::string to = instr.lhs.name;
+        int propagated = 0;
+        for (size_t i = 0; i < program.instructions.size(); ++i)
+        {
+            auto &instr = program.instructions[i];
 
-            // 只在复写安全时传播（源变量在传播区间内不被修改）
-            if (!from.empty() && !to.empty() && from != to &&
-                !from.empty() && !to.empty()) {
+            // 识别 x = y (y 是 VAR/TEMP, x 也是 VAR/TEMP)
+            if (instr.type == TACType::ASSIGN &&
+                (instr.lhs.type == TACOpType::VAR || instr.lhs.type == TACOpType::TEMP) &&
+                (instr.result.type == TACOpType::VAR || instr.result.type == TACOpType::TEMP) &&
+                instr.lhs.type != TACOpType::CONST_INT)
+            {
 
-                // 扫描后续指令，替换对 from 的使用
-                bool modified = false;
-                for (size_t j = i + 1; j < program.instructions.size(); ++j) {
-                    auto& later = program.instructions[j];
+                std::string from = instr.result.name;
+                std::string to = instr.lhs.name;
 
-                    // 遇到可能修改变量的指令，停止传播
-                    if (later.type == TACType::CALL || later.type == TACType::PARAM ||
-                        later.type == TACType::FUNC_ARG || later.type == TACType::RETURN) break;
-                    // to 被重新赋值，停止
-                    if ((later.type == TACType::ASSIGN || later.type == TACType::BINARY ||
-                         later.type == TACType::UNARY) && opn(later.result) == to) break;
-                    // from 被重新赋值，停止
-                    if ((later.type == TACType::ASSIGN || later.type == TACType::BINARY ||
-                         later.type == TACType::UNARY) && opn(later.result) == from) break;
+                // 只在复写安全时传播（源变量在传播区间内不被修改）
+                // 保守策略：如果 to 是函数参数（FUNC_ARG），跳过传播
+                // 因为 TCO 会用副本替换参数引用，而参数本身不应被替换
+                if (!from.empty() && !to.empty() && from != to &&
+                    !from.empty() && !to.empty() &&
+                    funcArgVars.find(to) == funcArgVars.end())
+                {
 
-                    // 替换
-                    auto lo = opn(later.lhs), ro = opn(later.rhs);
-                    std::string nl = (lo == from) ? to : lo;
-                    std::string nr = (ro == from) ? to : ro;
-                    if (nl != lo || nr != ro) {
-                        if (nl != lo) later.lhs = TACOperand::var(nl);
-                        if (nr != ro) later.rhs = TACOperand::var(nr);
-                        modified = true;
+                    // 扫描后续指令，替换对 from 的使用
+                    bool modified = false;
+                    for (size_t j = i + 1; j < program.instructions.size(); ++j)
+                    {
+                        auto &later = program.instructions[j];
+
+                        // 遇到可能修改变量的指令，停止传播
+                        if (later.type == TACType::CALL || later.type == TACType::PARAM ||
+                            later.type == TACType::FUNC_ARG || later.type == TACType::RETURN)
+                            break;
+                        // to 被重新赋值，停止
+                        if ((later.type == TACType::ASSIGN || later.type == TACType::BINARY ||
+                             later.type == TACType::UNARY) &&
+                            opn(later.result) == to)
+                            break;
+                        // from 被重新赋值，停止
+                        if ((later.type == TACType::ASSIGN || later.type == TACType::BINARY ||
+                             later.type == TACType::UNARY) &&
+                            opn(later.result) == from)
+                            break;
+
+                        // 替换
+                        auto lo = opn(later.lhs), ro = opn(later.rhs);
+                        std::string nl = (lo == from) ? to : lo;
+                        std::string nr = (ro == from) ? to : ro;
+                        if (nl != lo || nr != ro)
+                        {
+                            if (nl != lo)
+                                later.lhs = TACOperand::var(nl);
+                            if (nr != ro)
+                                later.rhs = TACOperand::var(nr);
+                            modified = true;
+                        }
                     }
+                    if (modified)
+                        ++propagated;
                 }
-                if (modified) ++propagated;
             }
         }
-    }
 
-    if (propagated > 0)
-        std::cerr << "[CopyProp] 复写传播: " << propagated << " 处\n";
-}
+        if (propagated > 0)
+            std::cerr << "[CopyProp] 复写传播: " << propagated << " 处\n";
+    }
 
 } // namespace MyCompiler

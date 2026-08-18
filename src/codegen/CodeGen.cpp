@@ -9,8 +9,7 @@ namespace MyCompiler
     // 可用的 s 寄存器池（s0-s11，共 12 个 callee-saved 寄存器）
     const std::vector<std::string> CodeGen::sRegPool_ = {
         "s0", "s1", "s2", "s3", "s4", "s5",
-        "s6", "s7", "s8", "s9", "s10", "s11"
-    };
+        "s6", "s7", "s8", "s9", "s10", "s11"};
 
     void CodeGen::generate(const TACProgram &program)
     {
@@ -268,7 +267,8 @@ namespace MyCompiler
                     curFn = instr.label.substr(5);
                     continue;
                 }
-                if (curFn.empty()) continue;
+                if (curFn.empty())
+                    continue;
 
                 auto countVar = [&](const TACOperand &op)
                 {
@@ -285,27 +285,34 @@ namespace MyCompiler
             {
                 const std::string &fn = kv.first;
                 // 只对包含循环的函数分配 s 寄存器
-                if (!funcHasLoop.count(fn)) continue;
+                if (!funcHasLoop.count(fn))
+                    continue;
 
                 auto &usage = kv.second;
                 std::vector<std::pair<std::string, int>> sorted(usage.begin(), usage.end());
                 std::sort(sorted.begin(), sorted.end(),
-                    [](const auto &a, const auto &b) { return a.second > b.second; });
+                          [](const auto &a, const auto &b)
+                          { return a.second > b.second; });
 
                 auto &regAlloc = funcRegAlloc[fn];
                 for (size_t i = 0; i < sorted.size() && i < sRegPool_.size(); ++i)
                 {
                     // 只分配使用次数 >= 2 的变量
-                    if (sorted[i].second < 2) break;
+                    if (sorted[i].second < 2)
+                        break;
                     regAlloc[sorted[i].first] = sRegPool_[i];
                 }
             }
         }
 
         // ============================================================
-        //  输出代码段头部
+        //  输出程序头部（_start 入口 + 栈初始化 + 调用 main）
         // ============================================================
-        emit(".text");
+        emitPrologue();
+
+        // _start 调用 main，返回值在 a0 中，随后 exit syscall
+        emit("call main");
+        emitExit(); // exit syscall: li a7, 93; ecall
 
         // ============================================================
         //  遍历 TAC 指令，生成 RISC-V 汇编
@@ -460,9 +467,11 @@ namespace MyCompiler
                         std::string lhsReg = loadOperand(instr.lhs, "t0");
                         // 如果 lhsReg 是 s 寄存器，结果也需写入 s 寄存器
                         std::string dstReg = ((instr.result.type == TACOpType::VAR || instr.result.type == TACOpType::TEMP) && varToReg_.count(instr.result.name))
-                            ? varToReg_[instr.result.name] : "t0";
+                                                 ? varToReg_[instr.result.name]
+                                                 : "t0";
                         emit("addi " + dstReg + ", " + lhsReg + ", " + std::to_string(c));
-                        if (dstReg == "t0") storeOperand(instr.result, "t0");
+                        if (dstReg == "t0")
+                            storeOperand(instr.result, "t0");
                         break;
                     }
                     // 减法：addi 负数
@@ -470,31 +479,44 @@ namespace MyCompiler
                     {
                         std::string lhsReg = loadOperand(instr.lhs, "t0");
                         std::string dstReg = ((instr.result.type == TACOpType::VAR || instr.result.type == TACOpType::TEMP) && varToReg_.count(instr.result.name))
-                            ? varToReg_[instr.result.name] : "t0";
+                                                 ? varToReg_[instr.result.name]
+                                                 : "t0";
                         emit("addi " + dstReg + ", " + lhsReg + ", " + std::to_string(-c));
-                        if (dstReg == "t0") storeOperand(instr.result, "t0");
+                        if (dstReg == "t0")
+                            storeOperand(instr.result, "t0");
                         break;
                     }
                     // 乘以 2^n：slli
                     if (instr.op == "*" && c > 0 && (c & (c - 1)) == 0)
                     {
                         int shift = 0, t = c;
-                        while (t > 1) { t >>= 1; ++shift; }
+                        while (t > 1)
+                        {
+                            t >>= 1;
+                            ++shift;
+                        }
                         std::string lhsReg = loadOperand(instr.lhs, "t0");
                         std::string dstReg = ((instr.result.type == TACOpType::VAR || instr.result.type == TACOpType::TEMP) && varToReg_.count(instr.result.name))
-                            ? varToReg_[instr.result.name] : "t0";
+                                                 ? varToReg_[instr.result.name]
+                                                 : "t0";
                         emit("slli " + dstReg + ", " + lhsReg + ", " + std::to_string(shift));
-                        if (dstReg == "t0") storeOperand(instr.result, "t0");
+                        if (dstReg == "t0")
+                            storeOperand(instr.result, "t0");
                         break;
                     }
                     // 除以 2^n：srai（算术右移，含负数修正）
                     if (instr.op == "/" && c > 0 && (c & (c - 1)) == 0)
                     {
                         int shift = 0, t = c;
-                        while (t > 1) { t >>= 1; ++shift; }
+                        while (t > 1)
+                        {
+                            t >>= 1;
+                            ++shift;
+                        }
                         std::string lhsReg = loadOperand(instr.lhs, "t0");
                         // 需要使用 t0 作为工作寄存器（涉及多步计算）
-                        if (lhsReg != "t0") emit("mv t0, " + lhsReg);
+                        if (lhsReg != "t0")
+                            emit("mv t0, " + lhsReg);
                         emit("srai t1, t0, 31");
                         if (c - 1 <= 2047)
                             emit("andi t1, t1, " + std::to_string(c - 1));
@@ -513,12 +535,14 @@ namespace MyCompiler
                     {
                         std::string lhsReg = loadOperand(instr.lhs, "t0");
                         std::string dstReg = ((instr.result.type == TACOpType::VAR || instr.result.type == TACOpType::TEMP) && varToReg_.count(instr.result.name))
-                            ? varToReg_[instr.result.name] : "t0";
+                                                 ? varToReg_[instr.result.name]
+                                                 : "t0";
                         if (instr.op == "==")
                             emit("seqz " + dstReg + ", " + lhsReg);
                         else
                             emit("snez " + dstReg + ", " + lhsReg);
-                        if (dstReg == "t0") storeOperand(instr.result, "t0");
+                        if (dstReg == "t0")
+                            storeOperand(instr.result, "t0");
                         break;
                     }
                     // 比较运算符与常数 RHS
@@ -527,11 +551,13 @@ namespace MyCompiler
                     {
                         std::string lhsReg = loadOperand(instr.lhs, "t0");
                         std::string dstReg = ((instr.result.type == TACOpType::VAR || instr.result.type == TACOpType::TEMP) && varToReg_.count(instr.result.name))
-                            ? varToReg_[instr.result.name] : "t0";
+                                                 ? varToReg_[instr.result.name]
+                                                 : "t0";
                         emit("slti " + dstReg + ", " + lhsReg + ", " + std::to_string(c));
                         if (instr.op == ">=")
                             emit("xori " + dstReg + ", " + dstReg + ", 1");
-                        if (dstReg == "t0") storeOperand(instr.result, "t0");
+                        if (dstReg == "t0")
+                            storeOperand(instr.result, "t0");
                         break;
                     }
                 }
@@ -542,7 +568,8 @@ namespace MyCompiler
                     std::string rhsReg = loadOperand(instr.rhs, "t1");
                     // 确定结果寄存器：如果 result 在 s 寄存器中，直接写入
                     std::string dstReg = ((instr.result.type == TACOpType::VAR || instr.result.type == TACOpType::TEMP) && varToReg_.count(instr.result.name))
-                        ? varToReg_[instr.result.name] : "t0";
+                                             ? varToReg_[instr.result.name]
+                                             : "t0";
 
                     // 如果 dstReg 与 lhsReg 或 rhsReg 相同，且需要多步计算，
                     // 可能会覆盖源操作数。对于单指令运算（add/sub/mul等），
@@ -550,7 +577,8 @@ namespace MyCompiler
                     // 但对于多步运算（<=, >=, ==, !=），需要用 t0 作为中间寄存器。
                     bool multiStep = (instr.op == "<=" || instr.op == ">=" ||
                                       instr.op == "==" || instr.op == "!=");
-                    if (multiStep) dstReg = "t0";
+                    if (multiStep)
+                        dstReg = "t0";
 
                     if (instr.op == "+")
                         emit("add " + dstReg + ", " + lhsReg + ", " + rhsReg);
@@ -611,7 +639,8 @@ namespace MyCompiler
                         }
                     }
 
-                    if (dstReg == "t0") storeOperand(instr.result, "t0");
+                    if (dstReg == "t0")
+                        storeOperand(instr.result, "t0");
                 }
                 break;
             }
@@ -621,14 +650,16 @@ namespace MyCompiler
                 // x = op y
                 std::string lhsReg = loadOperand(instr.lhs, "t0");
                 std::string dstReg = ((instr.result.type == TACOpType::VAR || instr.result.type == TACOpType::TEMP) && varToReg_.count(instr.result.name))
-                    ? varToReg_[instr.result.name] : "t0";
+                                         ? varToReg_[instr.result.name]
+                                         : "t0";
 
                 if (instr.op == "-")
                     emit("neg " + dstReg + ", " + lhsReg);
                 else if (instr.op == "!")
                     emit("seqz " + dstReg + ", " + lhsReg);
 
-                if (dstReg == "t0") storeOperand(instr.result, "t0");
+                if (dstReg == "t0")
+                    storeOperand(instr.result, "t0");
                 break;
             }
 
@@ -694,7 +725,7 @@ namespace MyCompiler
                     // 如果结果在 s 寄存器中，storeOperand 会 emit "mv sN, a0"
                     // 记录此 mv，用于消除后续 RETURN 中的 "mv a0, sN" 冗余
                     bool wasInSReg = ((instr.result.type == TACOpType::VAR || instr.result.type == TACOpType::TEMP) &&
-                                     varToReg_.count(instr.result.name));
+                                      varToReg_.count(instr.result.name));
                     storeOperand(instr.result, "a0");
                     if (wasInSReg && varToReg_.count(instr.result.name))
                     {

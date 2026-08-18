@@ -40,28 +40,10 @@ void Optimizer::strengthReduction(TACProgram& program) {
                 std::cerr << "[StrengthRed] 乘以 " << multiplier 
                          << " → 左移 " << shift << " 位\n";
             }
-            // 乘以 3 的优化已移除：原实现创建了 shiftInstr 但未插入到程序中，
-            // 导致引用未定义的临时变量。CodeGen 已在 BINARY 处理中对乘以 2 的幂
-            // 做了 slli 优化，乘以 3 由通用 mul 指令处理即可。
         }
-        // 除法优化：x / 2^n → x >> n（无符号）
-        else if (instr.op == "/" && instr.rhs.type == TACOpType::CONST_INT) {
-            int divisor = instr.rhs.intValue;
-            
-            if (divisor > 0 && (divisor & (divisor - 1)) == 0) {
-                int shift = 0;
-                int temp = divisor;
-                while (temp > 1) {
-                    temp >>= 1;
-                    ++shift;
-                }
-                
-                instr.op = ">>";
-                instr.rhs.intValue = shift;
-                std::cerr << "[StrengthRed] 除以 " << divisor 
-                         << " → 右移 " << shift << " 位\n";
-            }
-        }
+        // 除法优化：保留 / 运算符，由 CodeGen 正确处理带符号除法
+        // CodeGen 对 / 2^n 已实现了带 bias 的算术右移（正确舍入）
+        // 此处不转换为 >>，因为 C 除法向零截断，而 >> 向负无穷截断
     }
 }
 
