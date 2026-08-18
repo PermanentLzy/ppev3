@@ -17,6 +17,8 @@ target_include_directories(mycompiler_lib PUBLIC src/)
 add_executable(mycompiler ${MAIN_SOURCE})
 target_link_libraries(mycompiler PRIVATE mycompiler_lib)
 
-# 开启测试（需要 Google Test）
-enable_testing()
-add_subdirectory(tests)
+option(BUILD_TESTS "Build test programs" OFF)
+if(BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()
