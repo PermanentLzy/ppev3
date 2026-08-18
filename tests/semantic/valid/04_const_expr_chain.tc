@@ -1,0 +1,6 @@
+const int A = 1;
+const int B = A + 2;
+int C = B * 3;
+int main(void) {
+    return C;
+}

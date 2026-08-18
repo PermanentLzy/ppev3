@@ -1,0 +1,13 @@
+// p08_basic_combined: combined optimizations
+int main() {
+    const int N = 10;
+    int sum = 0;
+    int i = 0;
+    while (i < N) {
+        const int K = 5;       // invariant
+        int t = i + K;
+        sum = sum + t;
+        i = i + 1;
+    }
+    return sum;   // 105
+}

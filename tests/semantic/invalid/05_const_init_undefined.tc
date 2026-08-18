@@ -1,0 +1,5 @@
+// ERR_CONST_INIT_UNDEFINED: global const init references undeclared variable
+const int A = B;
+int main(void) {
+    return 0;
+}

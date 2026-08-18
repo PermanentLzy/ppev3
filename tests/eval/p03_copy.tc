@@ -1,0 +1,8 @@
+// p03_copy: copy propagation
+int main() {
+    int a = 5;
+    int b = a;       // copy
+    int c = b + 1;   // can use a directly
+    int d = b + 2;   // can use a directly
+    return c + d;    // 8 + 7 = 15
+}

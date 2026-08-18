@@ -1,0 +1,7 @@
+void setX(void) {
+    return;
+}
+int main(void) {
+    setX();
+    return 0;
+}

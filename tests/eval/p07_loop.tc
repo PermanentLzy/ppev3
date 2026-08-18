@@ -1,0 +1,13 @@
+// p07_loop: loop optimization (LICM)
+int main() {
+    int i = 0;
+    int sum = 0;
+    int a = 5;
+    int b = 10;
+    while (i < 100) {
+        int t = a + b;     // invariant
+        sum = sum + t;
+        i = i + 1;
+    }
+    return sum;   // 1500
+}

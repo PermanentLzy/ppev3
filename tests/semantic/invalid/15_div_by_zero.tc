@@ -1,0 +1,5 @@
+// ERR_DIVIDE_BY_ZERO: compile-time division by zero in expression
+int main(void) {
+    int x = 1 / 0;
+    return 0;
+}

@@ -1,0 +1,5 @@
+// ERR_CONTINUE_OUTSIDE_LOOP: continue statement not inside a loop
+int main(void) {
+    continue;
+    return 0;
+}

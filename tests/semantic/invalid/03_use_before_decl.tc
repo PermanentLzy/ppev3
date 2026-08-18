@@ -1,0 +1,6 @@
+// ERR_USE_BEFORE_DECL: variable used before its declaration
+int main(void) {
+    int y = x;
+    int x = 5;
+    return 0;
+}

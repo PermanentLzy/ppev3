@@ -1,0 +1,6 @@
+// ERR_CONST_REASSIGN: assigning to a const variable
+int main(void) {
+    const int X = 10;
+    X = 20;
+    return 0;
+}

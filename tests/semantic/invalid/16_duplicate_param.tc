@@ -1,0 +1,7 @@
+// ERR_REDEFINED_SYMBOL: duplicate parameter name in function definition
+int foo(int a, int a) {
+    return a;
+}
+int main(void) {
+    return 0;
+}

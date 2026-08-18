@@ -1,0 +1,4 @@
+// ERR_INVALID_MAIN_SIGNATURE: main must return int, not void
+void main(void) {
+    return;
+}

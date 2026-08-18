@@ -1,0 +1,9 @@
+// p02_dead_code: dead code elimination
+int main() {
+    int a = 1;
+    int b = 2;
+    int c = a + b;
+    int d = 999;     // dead - never used
+    int e = 888;     // dead - never used
+    return c;        // only c is live
+}

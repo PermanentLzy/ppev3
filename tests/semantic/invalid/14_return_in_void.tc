@@ -1,0 +1,8 @@
+// ERR_RETURN_TYPE_MISMATCH: returning a value from a void function
+void foo(void) {
+    return 1;
+}
+int main(void) {
+    foo();
+    return 0;
+}

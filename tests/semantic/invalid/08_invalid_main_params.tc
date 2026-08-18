@@ -1,0 +1,4 @@
+// ERR_INVALID_MAIN_SIGNATURE: main must have no parameters
+int main(int argc) {
+    return 0;
+}

@@ -1,0 +1,5 @@
+// ERR_BREAK_OUTSIDE_LOOP: break statement not inside a loop
+int main(void) {
+    break;
+    return 0;
+}

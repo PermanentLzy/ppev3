@@ -1,0 +1,8 @@
+// p04_common_subexpr: common subexpression elimination
+int main() {
+    int a = 3;
+    int b = 5;
+    int x = (a + b) * 2;
+    int y = (a + b) * 3;   // a+b is common subexpression
+    return x + y;          // 16 + 24 = 40
+}

@@ -1,0 +1,6 @@
+// ERR_CONST_EXPR_NON_CONST: local const initialized with non-constant expression
+int main(void) {
+    int a = 5;
+    const int B = a;
+    return 0;
+}

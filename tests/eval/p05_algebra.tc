@@ -1,0 +1,9 @@
+// p05_algebra: algebraic simplification
+int main() {
+    int a = 10;
+    int x = a + 0;    // -> a
+    int y = a * 1;    // -> a
+    int z = a * 0;    // -> 0
+    int w = a - 0;    // -> a
+    return x + y + z + w;  // 10 + 10 + 0 + 10 = 30
+}

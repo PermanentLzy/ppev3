@@ -1,0 +1,10 @@
+// p01_const: constant folding & propagation
+int main() {
+    const int A = 10;
+    const int B = 20;
+    const int C = A + B;     // 30
+    int x = A * 2;           // 20
+    int y = C - 5;           // 25
+    int z = x + y;           // 45
+    return z;
+}

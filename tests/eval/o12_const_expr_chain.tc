@@ -1,0 +1,11 @@
+// o12_const_expr_chain: chained constant expressions
+int main() {
+    const int A = 1;
+    const int B = A + 1;       // 2
+    const int C = B + 1;       // 3
+    const int D = C + 1;       // 4
+    const int E = D + 1;       // 5
+    const int F = E * 2;       // 10
+    const int G = F * F;       // 100
+    return G;                  // 100
+}

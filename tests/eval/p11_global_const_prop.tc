@@ -1,0 +1,16 @@
+// p11_global_const_prop: global constant propagation
+const int A = 5;
+const int B = 10;
+const int C = A + B;     // 15
+
+int helper(int x) {
+    return x * 2 + C;
+}
+
+int main() {
+    int a = A;            // 5
+    int b = B;            // 10
+    int c = C;            // 15
+    int d = helper(a);   // 5*2+15 = 25
+    return a + b + c + d; // 5+10+15+25 = 55
+}

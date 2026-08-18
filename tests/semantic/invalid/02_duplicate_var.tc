@@ -1,0 +1,6 @@
+// ERR_REDEFINED_SYMBOL: declaring same variable twice in same scope
+int main(void) {
+    int x = 1;
+    int x = 2;
+    return 0;
+}

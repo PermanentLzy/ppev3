@@ -1,0 +1,7 @@
+// ERR_MISSING_RETURN: int function with a path that does not return
+int main(void) {
+    int x = 1;
+    if (x) {
+        return 0;
+    }
+}

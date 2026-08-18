@@ -1,0 +1,5 @@
+// ERR_UNDECLARED_IDENT: use of undeclared variable x
+int main(void) {
+    int y = x;
+    return 0;
+}
