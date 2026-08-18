@@ -1,0 +1,15 @@
+// tc11_global_vars.tc
+// 测试: 全局变量
+int g_x = 10;
+int g_y = 20;
+
+int get_sum() {
+    return g_x + g_y;
+}
+
+int main() {
+    g_x = g_x + 1;          // 11
+    g_y = g_y - 5;          // 15
+    int local = get_sum();  // 11 + 15 = 26
+    return local;
+}

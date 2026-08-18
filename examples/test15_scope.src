@@ -1,0 +1,18 @@
+// test15_scope: 作用域与变量遮蔽
+int x;
+
+int f(int x) {
+    return x + 1;
+}
+
+int main() {
+    x = 5;
+    int y = f(3);
+    {
+        int x = 10;
+        y = y + x;
+    }
+    y = y + x;
+    return y;
+}
+// 期望: y=f(3)=4, y=4+10=14, y=14+5=19

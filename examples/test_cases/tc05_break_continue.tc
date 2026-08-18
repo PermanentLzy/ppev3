@@ -1,0 +1,15 @@
+// tc05_break_continue.tc
+// 测试: break 和 continue
+int main() {
+    int i = 0;
+    int sum = 0;
+    while (i < 20) {
+        i = i + 1;
+        if (i == 3)
+            continue;       // 跳过 i=3
+        if (i > 10)
+            break;          // i=11 时退出
+        sum = sum + i;      // sum = 1+2+4+5+6+7+8+9+10 = 52
+    }
+    return sum;
+}

@@ -1,0 +1,15 @@
+// test09_nested_while: 嵌套 while 循环
+int main() {
+    int i = 1;
+    int s = 0;
+    while (i <= 3) {
+        int j = 0;
+        while (j < i) {
+            s = s + 1;
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    return s;
+}
+// 期望: 1+2+3 = 6

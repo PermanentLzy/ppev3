@@ -1,0 +1,11 @@
+// tc13_unary.tc
+// 测试: 一元运算符 + - !
+int main() {
+    int a = 42;
+    int b = -a;         // -42
+    int c = +a;         // 42
+    int d = !0;         // 1
+    int e = !a;         // 0 (a非零)
+    int f = !!a;        // 1 (!!非零=1)
+    return b + c + d + e + f; // -42+42+1+0+1 = 2
+}

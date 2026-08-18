@@ -1,0 +1,8 @@
+// tc09_constants.tc
+// 测试: const 常量
+int main() {
+    const int X = 10;
+    const int Y = X + 5;     // 15
+    int z = Y * 2;           // 30
+    return z;
+}

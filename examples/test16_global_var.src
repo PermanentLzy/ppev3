@@ -1,0 +1,19 @@
+// test16_global_var: 全局变量
+int g;
+
+void setG(int v) {
+    g = v;
+}
+
+int getG() {
+    return g;
+}
+
+int main() {
+    g = 10;
+    int a = getG();
+    setG(20);
+    int b = getG();
+    return a + b;
+}
+// 期望: 10+20 = 30

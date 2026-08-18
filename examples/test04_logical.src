@@ -1,0 +1,24 @@
+// test04_logical: 逻辑与/或短路求值
+int f(int x) {
+    int v = 100;
+    if (x > 0)
+        v = v + 1;
+    return v;
+}
+
+int main() {
+    int a = 0;
+    int b = 5;
+    int r = 0;
+    // 短路: a>0 为假, 不调用 f
+    if (a > 0 && f(a) > 0)
+        r = r + 1;
+    // 不短路: b>0 为真, 调用 f
+    if (b > 0 && f(b) > 0)
+        r = r + f(b);
+    // 短路: a>0 假, 需要计算右边
+    if (a > 0 || b > 0)
+        r = r + 1;
+    return r;
+}
+// 期望: r=0 + r=0+101 + r=101+1 = 102

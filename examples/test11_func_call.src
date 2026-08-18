@@ -1,0 +1,16 @@
+// test11_func_call: 函数调用（有参无参）
+int add(int x, int y) {
+    return x + y;
+}
+
+int get42() {
+    return 42;
+}
+
+int main() {
+    int a = get42();
+    int b = add(1, 2);
+    int c = add(a, b);
+    return c;
+}
+// 期望: 42 + 3 = 45

@@ -1,0 +1,14 @@
+// test19_empty_return: 空语句与空块
+int main() {
+    int x = 0;
+    ;;;;;;
+    {
+        int y = 1;
+        {
+            x = y * 5;
+        }
+    }
+    ;
+    return x;
+}
+// 期望: 5

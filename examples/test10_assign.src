@@ -1,0 +1,11 @@
+// test10_assign: 赋值运算结合性
+int main() {
+    int a = 1;
+    int b = 2;
+    a = b = 3;
+    int c = a + b;
+    a = a + 1;
+    b = b * 2;
+    return a + b + c;
+}
+// 期望: a=b=3 → c=6, a=4, b=6 → 4+6+6 = 16

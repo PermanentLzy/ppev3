@@ -1,0 +1,21 @@
+// tc07_functions.tc
+// 测试: 函数定义与调用 (有参/无参, int/void 返回)
+int add(int a, int b) {
+    return a + b;
+}
+
+int mul(int x, int y) {
+    return x * y;
+}
+
+void nop() {
+    // void 函数不返回值
+    return;
+}
+
+int main() {
+    int s = add(10, 20);        // 30
+    int m = mul(3, 7);          // 21
+    nop();
+    return add(s, m);           // 51
+}

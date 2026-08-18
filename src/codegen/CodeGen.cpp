@@ -191,7 +191,7 @@ namespace MyCompiler
                 {
                     if (!curFn.empty())
                     {
-                        int frame = std::max(256, (static_cast<int>(varNames.size()) + 4) * 4);
+                        int frame = std::max(64, (static_cast<int>(varNames.size()) + 4) * 4);
                         funcFrameSizes[curFn] = frame;
                     }
                     curFn = instr.label.substr(5);
@@ -209,13 +209,13 @@ namespace MyCompiler
             }
             if (!curFn.empty())
             {
-                int frame = std::max(256, (static_cast<int>(varNames.size()) + 4) * 4);
+                int frame = std::max(64, (static_cast<int>(varNames.size()) + 4) * 4);
                 funcFrameSizes[curFn] = frame;
             }
         }
 
         // 计算最大帧大小（用于跨函数参数传递缓冲）
-        int maxFrameSize = 256;
+        int maxFrameSize = 64;
         for (auto &kv : funcFrameSizes)
             if (kv.second > maxFrameSize)
                 maxFrameSize = kv.second;
@@ -281,12 +281,10 @@ namespace MyCompiler
             }
 
             // 为每个函数分配 s 寄存器（按使用次数降序，最多 12 个）
+            // 邪修：对所有函数都分配寄存器，不只是含循环的函数
             for (auto &kv : funcVarUsage)
             {
                 const std::string &fn = kv.first;
-                // 只对包含循环的函数分配 s 寄存器
-                if (!funcHasLoop.count(fn))
-                    continue;
 
                 auto &usage = kv.second;
                 std::vector<std::pair<std::string, int>> sorted(usage.begin(), usage.end());
@@ -314,9 +312,17 @@ namespace MyCompiler
         // ============================================================
         //  遍历 TAC 指令，生成 RISC-V 汇编
         //  IR 不再有 GOTO wrapper，函数体直接顺序输出
+        //  邪修：索引遍历，支持前瞻优化 IF_GOTO+GOTO→beqz
         // ============================================================
-        for (auto &instr : program.instructions)
+        bool skipNext_ = false;
+        for (size_t instrIdx_ = 0; instrIdx_ < program.instructions.size(); ++instrIdx_)
         {
+            if (skipNext_)
+            {
+                skipNext_ = false;
+                continue;
+            }
+            auto &instr = program.instructions[instrIdx_];
             // --- 函数入口标签 ---
             if (instr.type == TACType::LABEL)
             {
@@ -669,9 +675,25 @@ namespace MyCompiler
 
             case TACType::IF_GOTO:
             {
-                std::string condReg = loadOperand(instr.lhs, "t0");
-                std::string rvLabel = labelMap_.count(instr.label) ? labelMap_[instr.label] : instr.label;
-                emit("bnez " + condReg + ", " + rvLabel);
+                // 邪修：IF_GOTO cond, L1 紧接 GOTO L2 → beqz cond, L2
+                // 省掉一条 j 指令，循环每次迭代少执行1条跳转
+                if (instrIdx_ + 1 < program.instructions.size() &&
+                    program.instructions[instrIdx_ + 1].type == TACType::GOTO)
+                {
+                    auto &nextInstr = program.instructions[instrIdx_ + 1];
+                    std::string condReg = loadOperand(instr.lhs, "t0");
+                    std::string skipLabel = labelMap_.count(nextInstr.label)
+                                                ? labelMap_[nextInstr.label]
+                                                : nextInstr.label;
+                    emit("beqz " + condReg + ", " + skipLabel);
+                    skipNext_ = true;
+                }
+                else
+                {
+                    std::string condReg = loadOperand(instr.lhs, "t0");
+                    std::string rvLabel = labelMap_.count(instr.label) ? labelMap_[instr.label] : instr.label;
+                    emit("bnez " + condReg + ", " + rvLabel);
+                }
                 break;
             }
 
@@ -958,8 +980,8 @@ namespace MyCompiler
         // 为保存的 s 寄存器额外分配空间
         int sRegSpace = static_cast<int>(usedSRegs_.size()) * 4;
         frameSize += sRegSpace;
-        if (frameSize < 256)
-            frameSize = 256;
+        if (frameSize < 64)
+            frameSize = 64;
         currentFrameSize_ = frameSize;
 
         emit("");
@@ -991,7 +1013,7 @@ namespace MyCompiler
     {
         int frameSize = currentFrameSize_;
         if (frameSize <= 0)
-            frameSize = 256;
+            frameSize = 64;
 
         // 恢复使用的 s 寄存器
         for (size_t i = 0; i < usedSRegs_.size(); ++i)

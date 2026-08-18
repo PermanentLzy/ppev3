@@ -1,0 +1,15 @@
+// test08_break_continue: break 和 continue
+int main() {
+    int i = 0;
+    int s = 0;
+    while (i < 20) {
+        i = i + 1;
+        if (i == 5)
+            continue;
+        if (i > 10)
+            break;
+        s = s + i;
+    }
+    return s;
+}
+// 期望: 1+2+3+4+6+7+8+9+10 = 50

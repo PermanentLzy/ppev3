@@ -1,0 +1,17 @@
+// test06_if: if/else 控制流
+int main() {
+    int x = 5;
+    int r = 0;
+    if (x > 3) {
+        r = 1;
+        if (x > 10) {
+            r = r + 10;
+        } else {
+            r = r + 2;
+        }
+    } else {
+        r = 100;
+    }
+    return r;
+}
+// 期望: x>3 真 → r=1, x>10 假 → r=1+2=3

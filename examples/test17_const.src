@@ -1,0 +1,8 @@
+// test17_const: 常量声明
+int main() {
+    const int X = 5;
+    const int Y = X * 2 + 1;
+    int z = X + Y;
+    return z;
+}
+// 期望: 5+11 = 16

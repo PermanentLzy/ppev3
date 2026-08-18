@@ -1,0 +1,19 @@
+// tc03_if_else.tc
+// 测试: if/else 条件分支
+int main() {
+    int a = 10;
+    int b = 20;
+    int result = 0;
+    if (a > b) {
+        result = 1;
+    }
+    if (a < b) {
+        result = result + 2;    // 2
+    }
+    if (a + 10 == b) {
+        result = result + 4;    // 6
+    } else {
+        result = result + 8;
+    }
+    return result;              // 6
+}

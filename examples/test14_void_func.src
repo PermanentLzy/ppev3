@@ -1,0 +1,14 @@
+// test14_void_func: void 函数
+int counter;
+void inc() {
+    counter = counter + 1;
+}
+
+int main() {
+    counter = 0;
+    inc();
+    inc();
+    inc();
+    return counter;
+}
+// 期望: 3

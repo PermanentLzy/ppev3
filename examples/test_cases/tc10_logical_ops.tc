@@ -1,0 +1,29 @@
+// tc10_logical_ops.tc
+// 测试: 逻辑运算 && || ! (短路求值)
+int side_effect() {
+    int x = 1;
+    return x;
+}
+
+int main() {
+    int a = 0;
+    int b = 5;
+    int r1 = 0;
+
+    // 短路: a==0 时 && 右侧不执行
+    if (a != 0 && side_effect() == 1)
+        r1 = 99;
+    else
+        r1 = 10;            // 进入这里
+
+    // 短路: b!=0 时 || 右侧不执行
+    int r2 = 0;
+    if (b != 0 || side_effect() == 2)
+        r2 = 20;            // 进入这里
+
+    // 逻辑非
+    int r3 = !a;            // 1 (a=0)
+    int r4 = !b;            // 0 (b=5)
+
+    return r1 + r2 + r3 + r4; // 10+20+1+0 = 31
+}

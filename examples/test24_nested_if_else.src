@@ -1,0 +1,14 @@
+// test24_nested_if_else: 嵌套 if-else（悬空 else）
+int main() {
+    int x = 1;
+    int r = 0;
+    if (x > 0)
+        if (x > 2)
+            r = 1;
+        else
+            r = 2;
+    else
+        r = 3;
+    return r;
+}
+// 期望: x>0 真, x>2 假, else 匹配最近 if → r=2

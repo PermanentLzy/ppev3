@@ -1,0 +1,17 @@
+// test23_cond_expr: 条件表达式作为语句
+int g;
+
+int always1() {
+    g = g + 1;
+    return 1;
+}
+
+int main() {
+    g = 0;
+    // 函数调用作为表达式语句
+    always1() + always1();
+    // 表达式语句
+    1 + 2;
+    return g;
+}
+// 期望: g = 2

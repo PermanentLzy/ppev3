@@ -1,0 +1,10 @@
+// tc01_basic_arithmetic.tc
+// 测试: 基本算术运算 + - * / % 和优先级
+int main() {
+    int a = 1 + 2 * 3;      // 7
+    int b = (1 + 2) * 3;    // 9
+    int c = 10 - 5 + 2;     // 7
+    int d = 10 / 3;          // 3
+    int e = 10 % 3;          // 1
+    return a + b + c - d - e; // 7+9+7-3-1 = 19
+}

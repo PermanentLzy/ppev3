@@ -1,0 +1,14 @@
+// test20_complex_expr: 复杂表达式
+int f3(int a, int b, int c) {
+    return a * b + c;
+}
+
+int main() {
+    int x = 2;
+    int y = 3;
+    int z = 4;
+    // 复杂嵌套表达式
+    int r = f3(x + y, z - 1, x * y) + x * (y + z);
+    return r;
+}
+// 期望: f3(5,3,6)=21, 2*7=14, 21+14=35

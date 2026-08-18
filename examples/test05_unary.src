@@ -1,0 +1,10 @@
+// test05_unary: 一元运算符
+int main() {
+    int a = 10;
+    int b = -a + 20;
+    int c = !0;
+    int d = !5;
+    int e = !!5;
+    return b + c + d + e;
+}
+// 期望: 10 + 1 + 0 + 1 = 12

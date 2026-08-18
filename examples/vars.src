@@ -1,0 +1,10 @@
+// 变量声明与赋值测试 (ToyC 仅支持 int 类型)
+int main() {
+    int a = 42;
+    int b = a + 8;
+    int c = b;
+    int flag = 1;
+    int result = (a < b) && flag;
+    return result + c;
+}
+// 期望: result=1(因为42<50且flag非零), c=50 → 51

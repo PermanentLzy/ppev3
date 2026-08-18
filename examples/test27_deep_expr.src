@@ -1,0 +1,10 @@
+// test27_deep_expr: 深层嵌套表达式
+int add(int a, int b) { return a + b; }
+int mul(int a, int b) { return a * b; }
+
+int main() {
+    int x = 2;
+    int y = 3;
+    return mul(add(x, y), add(mul(x, 2), mul(y, 3)));
+}
+// 期望: mul(5, add(4,9)) = 5*13 = 65

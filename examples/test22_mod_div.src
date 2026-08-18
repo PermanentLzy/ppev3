@@ -1,0 +1,9 @@
+// test22_mod_div: 模除运算
+int main() {
+    int a = 17 / 5;
+    int b = 17 % 5;
+    int c = (a * 5 + b) - 17;
+    int d = (-10) / 3;
+    return a + b + c + d + 10;
+}
+// 期望: a=3, b=2, c=0, d=-3 → 3+2+0-3+10 = 12

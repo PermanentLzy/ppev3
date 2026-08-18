@@ -1,0 +1,11 @@
+// test07_while: while 循环
+int main() {
+    int i = 0;
+    int s = 0;
+    while (i < 10) {
+        s = s + i;
+        i = i + 1;
+    }
+    return s;
+}
+// 期望: 0+1+2+...+9 = 45

@@ -1,0 +1,14 @@
+// test18_global_const: 全局常量
+const int STEP = 3;
+const int LIMIT = STEP * 5;
+
+int main() {
+    int i = 0;
+    int s = 0;
+    while (i < LIMIT) {
+        s = s + STEP;
+        i = i + STEP;
+    }
+    return s;
+}
+// 期望: 3+3+3+3+3 = 15
