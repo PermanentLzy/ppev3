@@ -32,13 +32,17 @@ using namespace MyCompiler;
 // ================================================================
 
 /// 源码 → AST → IR
-static std::unique_ptr<TACProgram> compileToIR(const std::string& src) {
+static std::unique_ptr<TACProgram> compileToIR(const std::string &src)
+{
     Lexer lexer(src);
     Parser parser(lexer);
     std::unique_ptr<Program> ast;
-    try {
+    try
+    {
         ast = parser.parse();
-    } catch (const ParseError& e) {
+    }
+    catch (const ParseError &e)
+    {
         ADD_FAILURE() << "Parse error: " << e.what();
         return nullptr;
     }
@@ -47,8 +51,9 @@ static std::unique_ptr<TACProgram> compileToIR(const std::string& src) {
 }
 
 /// 捕获 CodeGen 输出
-static std::string captureCodeGenOutput(const TACProgram& program) {
-    std::streambuf* oldCout = std::cout.rdbuf();
+static std::string captureCodeGenOutput(const TACProgram &program)
+{
+    std::streambuf *oldCout = std::cout.rdbuf();
     std::ostringstream oss;
     std::cout.rdbuf(oss.rdbuf());
 
@@ -60,35 +65,45 @@ static std::string captureCodeGenOutput(const TACProgram& program) {
 }
 
 /// 源码 → 汇编
-static std::string compileToAssembly(const std::string& src) {
+static std::string compileToAssembly(const std::string &src)
+{
     auto prog = compileToIR(src);
-    if (!prog) return "";
+    if (!prog)
+        return "";
     return captureCodeGenOutput(*prog);
 }
 
 /// 检查汇编输出是否包含指定行
-static bool containsLine(const std::string& asm_output, const std::string& line) {
+static bool containsLine(const std::string &asm_output, const std::string &line)
+{
     std::istringstream iss(asm_output);
     std::string current_line;
-    while (std::getline(iss, current_line)) {
+    while (std::getline(iss, current_line))
+    {
         size_t start = current_line.find_first_not_of(" \t");
-        if (start != std::string::npos) {
+        if (start != std::string::npos)
+        {
             current_line = current_line.substr(start);
         }
-        if (current_line == line) return true;
+        if (current_line == line)
+            return true;
     }
     return false;
 }
 
 /// 统计汇编中指定指令的出现次数
-static int countInstruction(const std::string& asm_output, const std::string& instr) {
+static int countInstruction(const std::string &asm_output, const std::string &instr)
+{
     int count = 0;
     std::istringstream iss(asm_output);
     std::string line;
-    while (std::getline(iss, line)) {
+    while (std::getline(iss, line))
+    {
         size_t pos = line.find(instr);
-        if (pos != std::string::npos) {
-            if (pos == 0 || line[pos - 1] == ' ' || line[pos - 1] == '\t') {
+        if (pos != std::string::npos)
+        {
+            if (pos == 0 || line[pos - 1] == ' ' || line[pos - 1] == '\t')
+            {
                 count++;
             }
         }
@@ -100,14 +115,16 @@ static int countInstruction(const std::string& asm_output, const std::string& in
 //  1. 基础赋值与常量
 // ================================================================
 
-TEST(CodeGenTest, SimpleAssignment) {
+TEST(CodeGenTest, SimpleAssignment)
+{
     std::string asm_out = compileToAssembly("int f() { int x = 42; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, "li t0, 42"));
     EXPECT_GE(countInstruction(asm_out, "sw"), 1);
 }
 
-TEST(CodeGenTest, VariableCopy) {
+TEST(CodeGenTest, VariableCopy)
+{
     std::string asm_out = compileToAssembly("int f() { int a = 1; int b = a; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, "li t0, 1"));
@@ -118,31 +135,36 @@ TEST(CodeGenTest, VariableCopy) {
 //  2. 算术运算
 // ================================================================
 
-TEST(CodeGenTest, Addition) {
+TEST(CodeGenTest, Addition)
+{
     std::string asm_out = compileToAssembly("int f() { int x = 1 + 2; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, "add t0, t0, t1"));
 }
 
-TEST(CodeGenTest, Subtraction) {
+TEST(CodeGenTest, Subtraction)
+{
     std::string asm_out = compileToAssembly("int f() { int x = 5 - 3; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, "sub t0, t0, t1"));
 }
 
-TEST(CodeGenTest, Multiplication) {
+TEST(CodeGenTest, Multiplication)
+{
     std::string asm_out = compileToAssembly("int f() { int x = 3 * 4; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, "mul t0, t0, t1"));
 }
 
-TEST(CodeGenTest, Division) {
+TEST(CodeGenTest, Division)
+{
     std::string asm_out = compileToAssembly("int f() { int x = 10 / 2; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, "div t0, t0, t1"));
 }
 
-TEST(CodeGenTest, Modulo) {
+TEST(CodeGenTest, Modulo)
+{
     std::string asm_out = compileToAssembly("int f() { int x = 10 % 3; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, "rem t0, t0, t1"));
@@ -152,40 +174,46 @@ TEST(CodeGenTest, Modulo) {
 //  3. 比较运算
 // ================================================================
 
-TEST(CodeGenTest, LessThan) {
+TEST(CodeGenTest, LessThan)
+{
     std::string asm_out = compileToAssembly("int f() { int x = a < b; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, "slt t0, t0, t1"));
 }
 
-TEST(CodeGenTest, LessEqual) {
+TEST(CodeGenTest, LessEqual)
+{
     std::string asm_out = compileToAssembly("int f() { int x = a <= b; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_GE(countInstruction(asm_out, "slt"), 1);
     EXPECT_GE(countInstruction(asm_out, "seqz"), 1);
 }
 
-TEST(CodeGenTest, GreaterThan) {
+TEST(CodeGenTest, GreaterThan)
+{
     std::string asm_out = compileToAssembly("int f() { int x = a > b; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, "slt t0, t1, t0"));
 }
 
-TEST(CodeGenTest, GreaterEqual) {
+TEST(CodeGenTest, GreaterEqual)
+{
     std::string asm_out = compileToAssembly("int f() { int x = a >= b; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_GE(countInstruction(asm_out, "slt"), 1);
     EXPECT_GE(countInstruction(asm_out, "seqz"), 1);
 }
 
-TEST(CodeGenTest, Equal) {
+TEST(CodeGenTest, Equal)
+{
     std::string asm_out = compileToAssembly("int f() { int x = a == b; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_GE(countInstruction(asm_out, "sub"), 1);
     EXPECT_GE(countInstruction(asm_out, "seqz"), 1);
 }
 
-TEST(CodeGenTest, NotEqual) {
+TEST(CodeGenTest, NotEqual)
+{
     std::string asm_out = compileToAssembly("int f() { int x = a != b; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_GE(countInstruction(asm_out, "sub"), 1);
@@ -196,13 +224,15 @@ TEST(CodeGenTest, NotEqual) {
 //  4. 一元运算
 // ================================================================
 
-TEST(CodeGenTest, UnaryMinus) {
+TEST(CodeGenTest, UnaryMinus)
+{
     std::string asm_out = compileToAssembly("int f() { int x = -42; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, "neg t0, t0"));
 }
 
-TEST(CodeGenTest, UnaryNot) {
+TEST(CodeGenTest, UnaryNot)
+{
     std::string asm_out = compileToAssembly("int f() { int x = !a; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, "seqz t0, t0"));
@@ -212,7 +242,8 @@ TEST(CodeGenTest, UnaryNot) {
 //  5. 控制流：if 语句
 // ================================================================
 
-TEST(CodeGenTest, IfStatement) {
+TEST(CodeGenTest, IfStatement)
+{
     std::string asm_out = compileToAssembly("int f() { int x = 0; if (x) { x = 1; } }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_GE(countInstruction(asm_out, "bnez"), 1);
@@ -220,7 +251,8 @@ TEST(CodeGenTest, IfStatement) {
     EXPECT_GE(countInstruction(asm_out, ".L"), 1);
 }
 
-TEST(CodeGenTest, IfElseStatement) {
+TEST(CodeGenTest, IfElseStatement)
+{
     std::string asm_out = compileToAssembly("int f() { int x = 0; if (x) { x = 1; } else { x = 2; } }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_GE(countInstruction(asm_out, ".L"), 2);
@@ -231,7 +263,8 @@ TEST(CodeGenTest, IfElseStatement) {
 //  6. 控制流：while 循环
 // ================================================================
 
-TEST(CodeGenTest, WhileLoop) {
+TEST(CodeGenTest, WhileLoop)
+{
     std::string asm_out = compileToAssembly("int f() { int x = 0; while (x < 10) { x = x + 1; } }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_GE(countInstruction(asm_out, ".L"), 2);
@@ -244,7 +277,8 @@ TEST(CodeGenTest, WhileLoop) {
 //  7. 函数调用与返回
 // ================================================================
 
-TEST(CodeGenTest, FunctionReturn) {
+TEST(CodeGenTest, FunctionReturn)
+{
     std::string asm_out = compileToAssembly("int f() { return 1; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, "ret"));
@@ -253,38 +287,42 @@ TEST(CodeGenTest, FunctionReturn) {
     EXPECT_GE(countInstruction(asm_out, "lw"), 1);
 }
 
-TEST(CodeGenTest, ProgramExit) {
+TEST(CodeGenTest, ProgramExit)
+{
     std::string asm_out = compileToAssembly("int f() { return 0; }");
     ASSERT_FALSE(asm_out.empty());
-    EXPECT_TRUE(containsLine(asm_out, "ecall"));
-    EXPECT_TRUE(containsLine(asm_out, "li a7, 93"));
+    // crt0.o 负责程序退出，编译器不生成 ecall
+    EXPECT_TRUE(containsLine(asm_out, "ret"));
 }
 
 // ================================================================
 //  8. 汇编结构
 // ================================================================
 
-TEST(CodeGenTest, AssemblyHeader) {
+TEST(CodeGenTest, AssemblyHeader)
+{
     std::string asm_out = compileToAssembly("int f() { int x = 1; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, ".text"));
-    EXPECT_TRUE(containsLine(asm_out, ".globl _start"));
-    EXPECT_TRUE(containsLine(asm_out, "_start:"));
-    EXPECT_TRUE(containsLine(asm_out, "addi sp, sp, -256"));
+    // crt0.o 提供 _start 入口，编译器只生成函数代码
+    EXPECT_TRUE(containsLine(asm_out, "sub sp, sp, t2"));
+    EXPECT_GE(countInstruction(asm_out, "sw"), 1);
 }
 
 // ================================================================
 //  9. 复杂表达式
 // ================================================================
 
-TEST(CodeGenTest, ComplexArithmetic) {
+TEST(CodeGenTest, ComplexArithmetic)
+{
     std::string asm_out = compileToAssembly("int f() { int x = 1 + 2 * 3; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, "mul t0, t0, t1"));
     EXPECT_TRUE(containsLine(asm_out, "add t0, t0, t1"));
 }
 
-TEST(CodeGenTest, NestedExpressions) {
+TEST(CodeGenTest, NestedExpressions)
+{
     std::string asm_out = compileToAssembly("int f() { int x = (1 + 2) * (3 - 4); }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, "add t0, t0, t1"));
@@ -296,14 +334,17 @@ TEST(CodeGenTest, NestedExpressions) {
 //  10. 边界情况
 // ================================================================
 
-TEST(CodeGenTest, EmptyFunction) {
+TEST(CodeGenTest, EmptyFunction)
+{
     std::string asm_out = compileToAssembly("void f() { }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_TRUE(containsLine(asm_out, ".text"));
-    EXPECT_TRUE(containsLine(asm_out, "ecall"));
+    // void 空函数应生成 ret
+    EXPECT_TRUE(containsLine(asm_out, "ret"));
 }
 
-TEST(CodeGenTest, MultipleVariables) {
+TEST(CodeGenTest, MultipleVariables)
+{
     std::string asm_out = compileToAssembly("int f() { int a = 1; int b = 2; int c = 3; }");
     ASSERT_FALSE(asm_out.empty());
     EXPECT_GE(countInstruction(asm_out, "li t0,"), 3);

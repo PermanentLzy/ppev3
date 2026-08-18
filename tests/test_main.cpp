@@ -141,7 +141,6 @@ TEST(MainTest, BasicAssignment)
     ASSERT_TRUE(result.success);
     EXPECT_FALSE(result.assembly.empty());
     EXPECT_TRUE(containsLine(result.assembly, ".text"));
-    EXPECT_TRUE(containsLine(result.assembly, ".globl _start"));
     EXPECT_TRUE(containsLine(result.assembly, "li t0, 42"));
 }
 
@@ -273,11 +272,10 @@ TEST(MainTest, AssemblyStructure)
     auto result = compile("int f() { int x = 1; }");
     ASSERT_TRUE(result.success);
     EXPECT_TRUE(containsLine(result.assembly, ".text"));
-    EXPECT_TRUE(containsLine(result.assembly, ".globl _start"));
-    EXPECT_TRUE(containsLine(result.assembly, "_start:"));
-    EXPECT_TRUE(containsLine(result.assembly, "addi sp, sp, -256"));
-    EXPECT_TRUE(containsLine(result.assembly, "ecall"));
-    EXPECT_TRUE(containsLine(result.assembly, "li a7, 93"));
+    // crt0.o 提供 _start 入口和 exit，编译器只生成函数代码
+    EXPECT_TRUE(containsLine(result.assembly, "sub sp, sp, t2"));
+    EXPECT_GE(countInstruction(result.assembly, "sw"), 1);
+    EXPECT_TRUE(containsLine(result.assembly, "ret"));
 }
 
 // ================================================================
@@ -289,8 +287,8 @@ TEST(MainTest, EndToEnd_Simple)
     // 模拟：echo "int f() { return 0; }" | mycompiler
     auto result = compile("int f() { return 0; }");
     ASSERT_TRUE(result.success);
-    EXPECT_TRUE(containsLine(result.assembly, "ecall"));
-    EXPECT_TRUE(containsLine(result.assembly, "li a7, 93"));
+    // crt0.o 负责程序退出，编译器生成 ret
+    EXPECT_TRUE(containsLine(result.assembly, "ret"));
 }
 
 TEST(MainTest, EndToEnd_WithOpt)

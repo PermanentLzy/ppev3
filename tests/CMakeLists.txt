@@ -63,11 +63,10 @@ target_link_libraries(test_optimizer PRIVATE GTest::gtest_main mycompiler_lib)
 target_include_directories(test_optimizer PRIVATE ../src)
 gtest_discover_tests(test_optimizer)
 
-# 代码生成测试
+# 代码生成测试（简易测试框架，自带 main）
 add_executable(test_codegen test_codegen.cpp)
-target_link_libraries(test_codegen PRIVATE GTest::gtest_main mycompiler_lib)
+target_link_libraries(test_codegen PRIVATE mycompiler_lib)
 target_include_directories(test_codegen PRIVATE ../src)
-gtest_discover_tests(test_codegen)
 
 # 代码生成测试（Google Test 版本）
 add_executable(test_codegen_gtest test_codegen_gtest.cpp)
